@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous Rescue Drone Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: #07111f;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 260px;
+      height: 100vh;
+      background: #0c1729;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 999;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: #00e5ff;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .menu a {
+      text-decoration: none;
+      color: white;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      transition: 0.3s;
+      font-size: 14px;
+    }
+
+    .menu a:hover {
+      background: #00bcd4;
+      transform: translateX(4px);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .status-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.08);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .green {
+      color: #00ff9c;
+    }
+
+    .red {
+      color: #ff4d4d;
+    }
+
+    .yellow {
+      color: #ffd54f;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #0d1b2f;
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .card h2 {
+      margin-bottom: 18px;
+      color: #00e5ff;
+      font-size: 20px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    button {
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: #00bcd4;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 600;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      opacity: 0.9;
+    }
+
+    .danger {
+      background: #ff3d3d;
+    }
+
+    .warning {
+      background: #ff9800;
+    }
+
+    .success {
+      background: #00c853;
+    }
+
+    .stream-box {
+      width: 100%;
+      height: 300px;
+      background: black;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stream-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .overlay-box {
+      position: absolute;
+      border: 3px solid red;
+      width: 120px;
+      height: 140px;
+      top: 60px;
+      left: 80px;
+      border-radius: 10px;
+    }
+
+    .overlay-label {
+      position: absolute;
+      top: -28px;
+      left: 0;
+      background: red;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .telemetry {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .telemetry-item {
+      background: rgba(255,255,255,0.04);
+      padding: 14px;
+      border-radius: 14px;
+    }
+
+    .telemetry-item span {
+      display: block;
+      margin-top: 6px;
+      color: #00ff9c;
+      font-weight: 600;
+    }
+
+    .map-box {
+      width: 100%;
+      height: 350px;
+      background: url('https://maps.gstatic.com/tactile/basepage/pegman_sherlock.png');
+      background-size: cover;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .marker {
+      width: 18px;
+      height: 18px;
+      background: red;
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    .marker.home {
+      background: lime;
+      top: 40%;
+      left: 50%;
+    }
+
+    .marker.drone {
+      background: cyan;
+      top: 50%;
+      left: 30%;
+    }
+
+    .marker.survivor {
+      background: orange;
+      top: 20%;
+      left: 60%;
+    }
+
+    input, select {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.08);
+      color: white;
+    }
+
+    .login-container {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg,#02111f,#0b2742);
+    }
+
+    .login-box {
+      width: 380px;
+      background: rgba(255,255,255,0.06);
+      padding: 35px;
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .login-box h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #00e5ff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .joystick {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      position: relative;
+      margin: 10px auto;
+    }
+
+    .stick {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #00e5ff;
+      position: absolute;
+      top: 55px;
+      left: 55px;
+    }
+
+    .log-box {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .log-item {
+      background: rgba(255,255,255,0.05);
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .battery-bar {
+      width: 100%;
+      height: 20px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .battery-fill {
+      width: 72%;
+      height: 100%;
+      background: lime;
+    }
+
+    @media(max-width: 950px) {
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+      }
+
+      .main {
+        margin-left: 0;
+      }
+
+      .telemetry {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="logo">RESCUE DRONE AI</div>
+
+    <div class="menu">
+      <a href="#connection">Drone Connection</a>
+      <a href="#camera">Live Camera</a>
+      <a href="#manual">Manual Control</a>
+      <a href="#autonomous">Autonomous Mode</a>
+      <a href="#telemetry">Telemetry</a>
+      <a href="#map">Map & GPS</a>
+      <a href="#database">Database</a>
+      <a href="#alerts">Alerts</a>
+      <a href="#battery">Battery</a>
+      <a href="#geofence">Geofence</a>
+      <a href="#rth">Return Home</a>
+      <a href="#espnow">ESP-NOW Remote</a>
+      <a href="#settings">Settings</a>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="topbar">
+      <h1>Autonomous Rescue Drone Dashboard</h1>
+
+      <div class="status-badges">
+        <div class="badge green">Drone Online</div>
+        <div class="badge green">ESP32 Connected</div>
+        <div class="badge yellow">GPS Active</div>
+        <div class="badge green">ESP-NOW Active</div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card" id="connection">
+        <h2>Drone Connection Panel</h2>
+
+        <div class="button-group">
+          <button class="success">Connect Drone</button>
+          <button class="danger">Disconnect</button>
+        </div>
+
+        <div class="telemetry" style="margin-top:20px;">
+          <div class="telemetry-item">WiFi Signal<span>-62 dBm</span></div>
+          <div class="telemetry-item">ESP32 Status<span>Connected</span></div>
+          <div class="telemetry-item">Flight Controller<span>Ready</span></div>
+          <div class="telemetry-item">Camera Status<span>Streaming</span></div>
+        </div>
+      </div>
+
+      <div class="card" id="camera">
+        <h2>Live Camera Stream</h2>
+
+        <div class="stream-box">
+          <img src="https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=1200&auto=format&fit=crop" alt="stream">
+
+          <div class="overlay-box">
+            <div class="overlay-label">Human 94%</div>
+          </div>
+        </div>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button>Capture</button>
+          <button>Record</button>
+          <button>Fullscreen</button>
+          <button>Zoom</button>
+        </div>
+
+        <label style="margin-top:15px;display:block;">Brightness</label>
+        <input type="range">
+
+        <label style="margin-top:15px;display:block;">Stream Quality</label>
+        <select>
+          <option>Low Latency</option>
+          <option>Balanced</option>
+          <option>HD</option>
+        </select>
+      </div>
+
+      <div class="card" id="manual">
+        <h2>Manual Control Panel</h2>
+
+        <div class="button-group">
+          <button class="success">Takeoff</button>
+          <button class="warning">Land</button>
+          <button class="danger">Emergency Stop</button>
+        </div>
+
+        <div class="grid" style="margin-top:20px;">
+          <div>
+            <h3 style="text-align:center;margin-bottom:10px;">Throttle / Yaw</h3>
+            <div class="joystick">
+              <div class="stick"></div>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="text-align:center;margin-bottom:10px;">Pitch / Roll</h3>
+            <div class="joystick">
+              <div class="stick"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group" style="margin-top:20px;">
+          <button>Keyboard Control</button>
+          <button>Touch Mode</button>
+          <button>Phone Control</button>
+        </div>
+      </div>
+
+      <div class="card" id="autonomous">
+        <h2>Autonomous Mode</h2>
+
+        <div class="button-group">
+          <button class="success">Enable Autonomous</button>
+          <button class="danger">Disable Autonomous</button>
+        </div>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button>Mission Start</button>
+          <button>Pause</button>
+          <button>Resume</button>
+          <button class="danger">Stop</button>
+        </div>
+      </div>
+
+      <div class="card" id="telemetry">
+        <h2>Telemetry Panel</h2>
+
+        <div class="telemetry">
+          <div class="telemetry-item">Battery<span>72%</span></div>
+          <div class="telemetry-item">Voltage<span>11.1V</span></div>
+          <div class="telemetry-item">Current<span>4.5A</span></div>
+          <div class="telemetry-item">Altitude<span>21m</span></div>
+          <div class="telemetry-item">GPS<span>22.7212, 88.3111</span></div>
+          <div class="telemetry-item">Speed<span>8 m/s</span></div>
+          <div class="telemetry-item">Heading<span>North East</span></div>
+          <div class="telemetry-item">Temperature<span>38°C</span></div>
+        </div>
+      </div>
+
+      <div class="card" id="map">
+        <h2>Map & GPS Panel</h2>
+
+        <div class="map-box">
+          <div class="marker home"></div>
+          <div class="marker drone"></div>
+          <div class="marker survivor"></div>
+        </div>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button>Return To Home</button>
+          <button>Draw Geofence</button>
+          <button>Coverage Map</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Human Detection AI</h2>
+
+        <div class="telemetry-item">Detection Counter<span>18 Humans</span></div>
+        <div class="telemetry-item">Current Confidence<span>94%</span></div>
+        <div class="telemetry-item">AI Status<span>YOLO + Edge Impulse</span></div>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button>Capture Screenshot</button>
+          <button>View History</button>
+        </div>
+      </div>
+
+      <div class="card" id="database">
+        <h2>Disaster Database Panel</h2>
+
+        <div class="log-box">
+          <div class="log-item">
+            Human Detected | Confidence 94% | GPS Saved
+          </div>
+
+          <div class="log-item">
+            Survivor Alert Sent to Telegram + Email
+          </div>
+
+          <div class="log-item">
+            Area Marked as Survivor Zone
+          </div>
+        </div>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button>Export Reports</button>
+          <button>Delete Records</button>
+          <button>Rescue Completed</button>
+        </div>
+      </div>
+
+      <div class="card" id="alerts">
+        <h2>Alert System</h2>
+
+        <div class="button-group">
+          <button>Telegram Alerts</button>
+          <button>Email Alerts</button>
+          <button class="danger">Emergency Popup</button>
+          <button class="warning">Sound Alarm</button>
+        </div>
+
+        <div class="log-box" style="margin-top:20px;">
+          <div class="log-item">
+            ALERT: Human Detected at 22.7212,88.3111
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="battery">
+        <h2>Battery Failsafe</h2>
+
+        <div class="telemetry-item">Battery Health<span>Good</span></div>
+        <div class="telemetry-item">Auto Return<span>Enabled</span></div>
+
+        <div class="battery-bar">
+          <div class="battery-fill"></div>
+        </div>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button class="warning">Low Battery Warning</button>
+          <button>Emergency Landing</button>
+        </div>
+      </div>
+
+      <div class="card" id="geofence">
+        <h2>Geofence System</h2>
+
+        <label>Maximum Distance</label>
+        <input type="number" value="200">
+
+        <label>Altitude Limit</label>
+        <input type="number" value="50">
+
+        <div class="button-group" style="margin-top:15px;">
+          <button>Enable Geofence</button>
+          <button class="danger">Boundary Alert</button>
+        </div>
+      </div>
+
+      <div class="card" id="rth">
+        <h2>Return To Home</h2>
+
+        <div class="button-group">
+          <button>Manual RTH</button>
+          <button>Signal Loss RTH</button>
+          <button>Battery RTH</button>
+          <button>Boundary RTH</button>
+        </div>
+      </div>
+
+      <div class="card" id="espnow">
+        <h2>ESP-NOW Remote Panel</h2>
+
+        <div class="telemetry">
+          <div class="telemetry-item">Remote Status<span>Connected</span></div>
+          <div class="telemetry-item">Signal Strength<span>Excellent</span></div>
+          <div class="telemetry-item">ESP32 Remote<span>Online</span></div>
+          <div class="telemetry-item">Automation Status<span>Enabled</span></div>
+        </div>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button>Emergency Override</button>
+          <button>Joystick Monitor</button>
+        </div>
+      </div>
+
+      <div class="card" id="settings">
+        <h2>Settings</h2>
+
+        <label>WiFi SSID</label>
+        <input type="text" value="DroneNetwork">
+
+        <label>SMTP Email</label>
+        <input type="email" value="drone@gmail.com">
+
+        <label>Telegram Bot Token</label>
+        <input type="text" value="123456:ABCXYZ">
+
+        <label>AI Confidence Threshold</label>
+        <input type="range" value="80">
+
+        <label>Movement Timing</label>
+        <input type="number" value="8">
+
+        <label>Camera Quality</label>
+        <select>
+          <option>VGA</option>
+          <option>SVGA</option>
+          <option>HD</option>
+        </select>
+
+        <div class="button-group" style="margin-top:15px;">
+          <button class="success">Save Settings</button>
+          <button>Reset</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function login() {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+
+    setTimeout(() => {
+      alert('Session Timeout Warning: Auto logout after inactivity');
+    }, 15000);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    console.log('Keyboard Control:', e.key);
+  });
+
+  function updateTelemetry() {
+    console.log('Telemetry updating...');
+  }
+
+  setInterval(updateTelemetry, 3000);
+</script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDfws8OBnn_XzhCZ-JaZeS3h4JSzG9ujtg",
+  authDomain: "drone-dec6e.firebaseapp.com",
+  projectId: "drone-dec6e",
+  storageBucket: "drone-dec6e.firebasestorage.app",
+  messagingSenderId: "578742639060",
+  appId: "1:578742639060:web:76622c74f29b4109a89e41",
+  measurementId: "G-QDS1K44JNH"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+
+// Protect dashboard page
+onAuthStateChanged(auth,(user)=>{
+
+  if(!user){
+    window.location.href = "signup-login.html";
+  }
+
+});
+
+
+// Logout function
+window.logout = async function(){
+
+  await signOut(auth);
+
+  window.location.href = "signup-login.html";
+}
+
+</script>
+
+</body>
+</html>
