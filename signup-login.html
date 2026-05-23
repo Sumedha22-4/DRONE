@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Drone Authentication</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
+    }
+
+    body{
+      background:linear-gradient(135deg,#02111f,#0b2742);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+    }
+
+    .auth-box{
+      width:400px;
+      background:rgba(255,255,255,0.06);
+      padding:35px;
+      border-radius:24px;
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 0 30px rgba(0,0,0,0.3);
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:25px;
+      color:#00e5ff;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      margin-bottom:15px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,0.08);
+      color:white;
+      font-size:15px;
+    }
+
+    input::placeholder{
+      color:#ccc;
+    }
+
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:15px;
+      transition:0.3s;
+      margin-top:10px;
+    }
+
+    button:hover{
+      transform:scale(1.02);
+    }
+
+    .login-btn{
+      background:#00bcd4;
+      color:white;
+    }
+
+    .signup-btn{
+      background:#00c853;
+      color:white;
+    }
+
+    .switch{
+      text-align:center;
+      margin-top:20px;
+      color:#ccc;
+      cursor:pointer;
+    }
+
+    .switch span{
+      color:#00e5ff;
+      font-weight:600;
+    }
+
+    .hidden{
+      display:none;
+    }
+
+    .status{
+      margin-top:15px;
+      text-align:center;
+      color:#00ff9c;
+      font-size:14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-box">
+
+  <h1 id="title">Drone Login</h1>
+
+  <input type="text" id="name" placeholder="Full Name" class="hidden">
+
+  <input type="email" id="email" placeholder="Email Address">
+
+  <input type="password" id="password" placeholder="Password">
+
+  <button class="login-btn" id="loginBtn">Login</button>
+
+  <button class="signup-btn hidden" id="signupBtn">Create Account</button>
+
+  <div class="switch" onclick="toggleMode()">
+    <span id="switchText">Create New Account</span>
+  </div>
+
+  <div class="status" id="status"></div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
+// ================= FIREBASE CONFIG =================
+// Replace with your Firebase project config
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDfws8OBnn_XzhCZ-JaZeS3h4JSzG9ujtg",
+  authDomain: "drone-dec6e.firebaseapp.com",
+  projectId: "drone-dec6e",
+  storageBucket: "drone-dec6e.firebasestorage.app",
+  messagingSenderId: "578742639060",
+  appId: "1:578742639060:web:76622c74f29b4109a89e41",
+  measurementId: "G-QDS1K44JNH"
+};
+
+// ===================================================
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const title = document.getElementById("title");
+const nameInput = document.getElementById("name");
+const loginBtn = document.getElementById("loginBtn");
+const signupBtn = document.getElementById("signupBtn");
+const switchText = document.getElementById("switchText");
+const statusBox = document.getElementById("status");
+
+let isSignup = false;
+
+window.toggleMode = function () {
+
+  isSignup = !isSignup;
+
+  if(isSignup){
+    title.innerText = "Create Account";
+    nameInput.classList.remove("hidden");
+    signupBtn.classList.remove("hidden");
+    loginBtn.classList.add("hidden");
+    switchText.innerText = "Already Have Account?";
+  } else {
+    title.innerText = "Drone Login";
+    nameInput.classList.add("hidden");
+    signupBtn.classList.add("hidden");
+    loginBtn.classList.remove("hidden");
+    switchText.innerText = "Create New Account";
+  }
+}
+
+
+// ================= SIGNUP =================
+
+signupBtn.addEventListener("click", async () => {
+
+  const name = nameInput.value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if(!name || !email || !password){
+    statusBox.innerText = "Please fill all fields";
+    return;
+  }
+
+  try{
+
+    const userCredential =
+      await createUserWithEmailAndPassword(auth, email, password);
+
+    await updateProfile(userCredential.user,{
+      displayName:name
+    });
+
+    statusBox.innerText = "Account Created Successfully";
+
+    setTimeout(()=>{
+      window.location.href = "dashboard.html";
+    },1500);
+
+  }catch(error){
+    statusBox.innerText = error.message;
+  }
+
+});
+
+
+// ================= LOGIN =================
+
+loginBtn.addEventListener("click", async () => {
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try{
+
+    await signInWithEmailAndPassword(auth,email,password);
+
+    statusBox.innerText = "Login Successful";
+
+    setTimeout(()=>{
+      window.location.href = "dashboard.html";
+    },1000);
+
+  }catch(error){
+    statusBox.innerText = error.message;
+  }
+
+});
+
+
+// ================= AUTO LOGIN =================
+
+onAuthStateChanged(auth,(user)=>{
+
+  if(user){
+    window.location.href = "index.html";
+  }
+
+});
+
+</script>
+
+</body>
+</html>
